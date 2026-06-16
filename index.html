@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { 
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            font-family: sans-serif; 
             padding: 20px; 
             max-width: 1000px; 
             margin: auto; 
@@ -42,7 +42,6 @@
             list-style-type: none; 
             padding: 0; 
             display: grid; 
-            /* 響應式 Grid：大螢幕 4 排，手機自動變成 2 排 */
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
             gap: 15px; 
         }
@@ -74,7 +73,6 @@
 
     <script>
         const version = "1";
-        // 依照您的要求，將所有遊戲連結整理進此列表
         const games = [
             { name: "加法遊戲", file: "addition-game-nonios.html" },
             { name: "九九乘法遊戲", file: "timestable-nonios.html" },
@@ -84,7 +82,7 @@
         const listElement = document.getElementById('game-list');
         games.forEach(game => {
             const li = document.createElement('li');
-            li.innerHTML = `<div class="box game-link"><a href="${game.file}?v=${version}">${game.name}</a></div>`;
+            li.innerHTML = '<div class="box game-link"><a href="' + game.file + '?v=' + version + '">' + game.name + '</a></div>';
             listElement.appendChild(li);
         });
     </script>
