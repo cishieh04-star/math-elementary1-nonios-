@@ -2,27 +2,34 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>數學題目練習</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #fdf6e3; margin: 0; min-height: 100vh; }
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 10px; background-color: #fdf6e3; margin: 0; min-height: 100vh; }
         
-        /* 開始按鈕層，用來解鎖 Android 音訊權限 */
         #startScreen { position: fixed; top:0; left:0; width: 100%; height: 100%; background: #fdf6e3; z-index: 999; display: flex; align-items: center; justify-content: center; }
-        .start-btn { padding: 30px 60px; font-size: 24px; background: #ff69b4; color: white; border-radius: 20px; cursor: pointer; border: none; }
+        .start-btn { padding: 20px 40px; font-size: 20px; background: #ff69b4; color: white; border-radius: 20px; cursor: pointer; border: none; }
 
-        .container { width: 100%; max-width: 800px; text-align: center; }
-        .char-wrapper { display: inline-flex; align-items: center; margin: 5px; padding: 10px; background: white; border: 2px solid #8b4513; border-radius: 8px; cursor: pointer; }
-        .char { font-size: 32px; font-weight: bold; margin-right: 8px; }
-        .zhuyin-col { display: flex; flex-direction: column; font-size: 16px; color: #d35400; line-height: 1.2; text-align: center; }
+        .container { width: 100%; max-width: 600px; text-align: center; }
         
-        .slots-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 30px 0; min-height: 80px; }
-        .slot { width: 60px; height: 80px; border: 3px dashed #8b4513; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        /* 修正後的字卡樣式：固定寬度並確保注音排列不亂跑 */
+        .char-wrapper { 
+            display: inline-flex; align-items: center; justify-content: center;
+            margin: 4px; padding: 8px 5px; background: white; 
+            border: 2px solid #8b4513; border-radius: 8px; cursor: pointer;
+            width: 75px; height: 75px; 
+        }
+        .char { font-size: 28px; font-weight: bold; margin-right: 2px; }
+        .zhuyin-col { display: flex; flex-direction: column; font-size: 12px; color: #d35400; line-height: 1.1; width: 18px; }
         
-        .word-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 30px; }
+        .slots-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 20px 0; min-height: 70px; }
+        .slot { width: 55px; height: 75px; border: 2px dashed #8b4513; background: #fff; border-radius: 8px; }
+        
+        .word-pool { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-top: 20px; }
         .hidden { visibility: hidden; }
-        .audio-btn { padding: 15px 40px; font-size: 20px; background: #ff69b4; color: white; border: none; border-radius: 12px; cursor: pointer; }
+        .audio-btn { padding: 10px 20px; font-size: 18px; background: #ff69b4; color: white; border: none; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -32,7 +39,7 @@
 </div>
 
 <div class="container">
-    <h2>數學題目練習</h2>
+    <h3>數學題目練習</h3>
     <button class="audio-btn" onclick="triggerSpeak()">🔊 聽題目</button>
     <div id="slots" class="slots-container"></div>
     <div id="word-pool" class="word-pool"></div>
@@ -76,6 +83,7 @@
         [...levels[currentLevel].data].sort(() => Math.random() - 0.5).forEach(item => {
             let div = document.createElement('div');
             div.className = 'char-wrapper';
+            // 垂直排列注音
             let zhuyinHTML = item.z.split('').map(char => `<span>${char}</span>`).join('');
             div.innerHTML = `<div class="char">${item.c}</div><div class="zhuyin-col">${zhuyinHTML}</div>`;
             
