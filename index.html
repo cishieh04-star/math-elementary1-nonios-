@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小一數學互動遊戲(非蘋果系統專用)</title>
+    <title>小一數學互動教學</title>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { 
-            font-family: sans-serif; padding: 10px; max-width: 800px; 
+            font-family: 'Microsoft JhengHei', sans-serif; padding: 10px; max-width: 600px; 
             margin: auto; background-color: #fdf6e3; min-height: 100vh;
             display: flex; flex-direction: column;
         }
         .box {
-            padding: 10px; margin: 5px 0; border-radius: 15px;
+            padding: 15px; margin: 8px 0; border-radius: 15px;
             font-weight: bold; text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: flex; align-items: center; justify-content: center;
@@ -20,16 +20,15 @@
         .header-box { background: #5d4037; color: #ffffff; font-size: 1.5rem; }
         .category-box { background: #ffe4b5; color: #5d4037; font-size: 1rem; width: fit-content; margin: 5px auto; padding: 5px 15px; }
         
-        /* 調整清單佈局，使其充滿畫面並垂直彈性排列 */
+        /* 確保 ul 會佔據剩餘空間 */
         ul { 
             list-style-type: none; padding: 0; margin: 10px 0 0 0; 
             flex-grow: 1; display: flex; flex-direction: column; 
         }
         li { flex-grow: 1; display: flex; }
         
-        /* 按鈕高度使用 vh 單位，隨視窗高度自動彈性調整 */
         .game-link { 
-            background: #2e7d32; color: #ffffff; font-size: 1.1rem; 
+            background: #2e7d32; color: #ffffff; font-size: 1.2rem; 
             cursor: pointer; width: 100%; height: 100%; min-height: 50px;
         }
         a { text-decoration: none; color: inherit; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -43,20 +42,25 @@
     <ul id="game-list"></ul>
 
     <script>
-        const games = [
-            { name: "加法遊戲", file: "./addition-game-nonios.html" },
-            { name: "九九乘法遊戲", file: "./timestable-nonios.html" },
-            { name: "數學題目練習", file: "./interactivegame-nonios.html" },
-            { name: "月曆小達人", file: "./month-day-nonios.html" },
-            { name: "天國八福注音遊戲", file: "./zhuyin-nonios.html" }
-            { name: "看時鐘選答案", file: "./readclock-nonios.html" }
-        ];
+        // 將邏輯放入 DOMContentLoaded，確保瀏覽器讀完 HTML 後才開始生成按鈕
+        document.addEventListener('DOMContentLoaded', function() {
+            const games = [
+                { name: "加法遊戲", file: "./addition-game-nonios.html" },
+                { name: "九九乘法遊戲", file: "./timestable-nonios.html" },
+                { name: "數學題目練習", file: "./interactivegame-nonios.html" },
+                { name: "月曆小達人", file: "./month-day-nonios.html" },
+                { name: "天國八福注音遊戲", file: "./zhuyin-nonios.html" },
+                { name: "看時鐘選答案", file: "./readclock-nonios.html" },
+                { name: "看時間，轉時鐘", file: "./setclock-nonios.html" }
+            ];
 
-        const listElement = document.getElementById('game-list');
-        games.forEach(game => {
-            const li = document.createElement('li');
-            li.innerHTML = '<div class="box game-link"><a href="' + game.file + '">' + game.name + '</a></div>';
-            listElement.appendChild(li);
+            const listElement = document.getElementById('game-list');
+            
+            games.forEach(game => {
+                const li = document.createElement('li');
+                li.innerHTML = '<div class="box game-link"><a href="' + game.file + '">' + game.name + '</a></div>';
+                listElement.appendChild(li);
+            });
         });
     </script>
 </body>
