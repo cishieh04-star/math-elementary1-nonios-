@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>看時鐘選答案 - 終極觸控版</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* 強制重置，並加上禁用原生滑動干擾 */
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; position: fixed; background-color: #FFF9C4; font-family: 'Microsoft JhengHei', sans-serif; touch-action: none; -webkit-user-select: none; user-select: none; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        #startScreen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #FFF8E1; z-index: 9999; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; 
+        }
+        .start-btn { font-size: 1.8rem; padding: 20px 40px; border-radius: 20px; background: #4CAF50; color: white; border: none; box-shadow: 0 6px #2E7D32; }
+        .hint { font-size: 0.9rem; color: #555; text-align: center; }
+
+        .main-container { width: 90%; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .clock-container { width: 180px; height: 180px; border-radius: 50%; background: white; border: 8px solid #FF9800; position: relative; }
+        
+        .number { position: absolute; width: 30px; height: 30px; text-align: center; font-size: 18px; font-weight: bold; color: #5D4037; left: 50%; top: 50%; margin-left: -15px; margin-top: -15px; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center; border-radius: 10px; }
+        .hour-hand { width: 6px; height: 50px; background: #4E342E; margin-left: -3px; z-index: 2; }
+        .minute-hand { width: 4px; height: 75px; background: #E64A19; margin-left: -2px; z-index: 3; }
+        
+        .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+        .option-btn { background: white; border: 3px solid #FFCC80; border-radius: 15px; padding: 15px 0; font-size: 1.5rem; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div id="startScreen">
+        <div style="font-size: 2rem; font-weight: bold; color: #5D4037;">看時鐘選答案</div>
+        <button class="start-btn" id="startBtn">開始遊戲</button>
+        <p class="hint">(三星與安卓專屬防護版)</p>
+    </div>
+
+    <div class="main-container">
+        <div style="font-size: 1.5rem; font-weight: bold; color: #333;">現在是幾點鐘？</div>
+        <div class="clock-container" id="clockFace">
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+        </div>
+        <div class="options-grid" id="optionsContainer"></div>
+    </div>
+
+    <script>
+        // --- 智慧觸控引擎 ---
+        let globalLock = false;
+        function bindTap(btn, callback) {
+            btn.addEventListener('touchstart', function(e) {
+                if (e.cancelable) e.preventDefault();
+                if (!globalLock) {
+                    globalLock = true; callback.call(this, e);
+                    setTimeout(() => globalLock = false, 300);
+                }
+            }, {passive: false});
+            btn.addEventListener('mousedown', function(e) {
+                if (!globalLock) {
+                    globalLock = true; callback.call(this, e);
+                    setTimeout(() => globalLock = false, 300);
+                }
+            });
+        }
+
+        // 初始化數字佈局
+        const clock = document.getElementById('clockFace');
+        for(let i=1; i<=12; i++) {
+            let angle = (i * 30) * (Math.PI / 180);
+            let x = Math.sin(angle) * 70;
+            let y = -Math.cos(angle) * 70;
+            clock.innerHTML += `<div class="number" style="transform: translate(${x}px, ${y}px)">${i}</div>`;
+        }
+
+        function speakText(text) {
+            try {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-TW'; msg.rate = 0.9;
+                window.speechSynthesis.speak(msg);
+            } catch(e){}
+        }
+
+        // 綁定開始按鈕
+        window.onload = function() {
+            bindTap(document.getElementById('startBtn'), function() {
+                document.getElementById('startScreen').style.display = 'none';
+                speakText("遊戲開始");
+                generateQuestion();
+            });
+        };
+
+        function generateQuestion() {
+            let h = Math.floor(Math.random() * 12) + 1;
+            let m = Math.random() < 0.5 ? 0 : 30;
+            
+            document.getElementById('hourHand').style.transform = `rotate(${((h % 12) * 30 + m * 0.5)}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${m * 6}deg)`;
+            
+            let correctStr = `${h}:${m === 0 ? "00" : "30"}`;
+            let options = [correctStr];
+            while(options.length < 4) {
+                let oh = Math.floor(Math.random() * 12) + 1;
+                let om = Math.random() < 0.5 ? 0 : 30;
+                let os = `${oh}:${om === 0 ? "00" : "30"}`;
+                if(!options.includes(os)) options.push(os);
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            options.forEach(opt => {
+                let btn = document.createElement('div');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.dataset.isCorrect = (opt === correctStr);
+                
+                // 動態綁定每個選項
+                bindTap(btn, function() {
+                    if(this.dataset.isCorrect === "true") {
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        speakText("太棒了！答對了！");
+                        setTimeout(generateQuestion, 2000);
+                    } else {
+                        speakText("再算算看喔");
+                    }
+                });
+                container.appendChild(btn);
+            });
+        }
+    </script>
+</body>
+</html>

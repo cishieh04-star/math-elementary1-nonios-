@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>看時間，轉時鐘 - 三星終極修正版</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* 徹底解決三星/Android觸控偏移與無反應問題 */
+        html, body { 
+            width: 100vw; height: 100vh; margin: 0; padding: 0; 
+            overflow: hidden; background-color: #FDF6E3; 
+            font-family: 'Microsoft JhengHei', sans-serif; 
+            touch-action: none; /* 禁用所有瀏覽器預設滑動/縮放，當作原生App運行 */
+            -webkit-user-select: none; user-select: none;
+        }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        #homeScreen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #FDF6E3; z-index: 10000; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; 
+        }
+        .enter-btn { font-size: 1.5rem; padding: 20px 40px; border-radius: 20px; background: #8D6E63; color: white; border: none; box-shadow: 0 6px #5D4037; }
+        
+        .main-container { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 90%; max-width: 400px; }
+        .info-panel { background: #FFFFFF; padding: 15px; border-radius: 20px; text-align: center; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .clock-container { width: 180px; height: 180px; border-radius: 50%; background: white; border: 8px solid #D7CCC8; position: relative; }
+        .number { position: absolute; width: 30px; height: 30px; text-align: center; font-size: 18px; font-weight: bold; left: 50%; top: 50%; margin-left: -15px; margin-top: -15px; pointer-events: none; color: #3E2723; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center; border-radius: 10px; }
+        .hour-hand { width: 6px; height: 50px; background: #3E2723; margin-left: -3px; z-index: 2; }
+        .minute-hand { width: 4px; height: 80px; background: #BF360C; margin-left: -2px; z-index: 3; }
+        
+        .btn { background: #8D6E63; color: white; padding: 15px 30px; border-radius: 15px; border: none; font-size: 1.3rem; font-weight: bold; box-shadow: 0 4px #5D4037; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0px #5D4037; }
+    </style>
+</head>
+<body>
+
+    <div id="homeScreen">
+        <div style="font-size: 2.5rem; font-weight: bold; color: #5D4037;">看時間，轉時鐘</div>
+        <button class="enter-btn" id="enterBtn">按此進入遊戲</button>
+        <p style="font-size: 0.9rem; color: #666; text-align: center;">(三星手機專屬修正版)</p>
+    </div>
+
+    <div class="main-container">
+        <div class="info-panel" id="taskPanel">
+            <div id="targetText" style="font-size: 1.3rem; font-weight: bold; color: #5D4037;">現在是？</div>
+            <div id="currentTime" style="font-size: 1.5rem; font-weight: bold; margin-top: 10px;">目前時間：-- : --</div>
+        </div>
+        
+        <div class="clock-container" id="clockFace">
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+        </div>
+        
+        <button class="btn" id="addBtn">向前轉 10 分鐘</button>
+    </div>
+
+    <script>
+        const clock = document.getElementById('clockFace');
+        for(let i=1; i<=12; i++) {
+            let angle = (i * 30) * (Math.PI / 180);
+            let dist = 75;
+            clock.innerHTML += `<div class="number" style="transform: translate(${Math.sin(angle)*dist}px, ${-Math.cos(angle)*dist}px)">${i}</div>`;
+        }
+
+        let exactMinutes = 0;
+        let targetMins = 0;
+        let lastTargetText = "";
+        let isProcessing = false; // 防連點機制
+
+        function speakText(text) {
+            try {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'zh-TW';
+                msg.rate = 0.9;
+                window.speechSynthesis.speak(msg);
+            } catch(e) {}
+        }
+
+        function generateNewTask() {
+            let currentTotalMins = Math.round(exactMinutes);
+            let offset = (Math.floor(Math.random() * 3) + 1) * 10;
+            targetMins = currentTotalMins + offset;
+            
+            let targetH = Math.floor((targetMins / 60) % 12) || 12;
+            let targetM = targetMins % 60;
+            
+            lastTargetText = `請把時鐘轉到，${targetH}點${targetM === 0 ? "鐘" : targetM + "分"}`;
+            document.getElementById('targetText').innerText = `請轉到：${targetH}點${targetM === 0 ? "鐘" : targetM + "分"}`;
+            speakText(lastTargetText);
+        }
+
+        function updateDisplay() {
+            document.getElementById('minuteHand').style.transform = `rotate(${exactMinutes * 6}deg)`;
+            document.getElementById('hourHand').style.transform = `rotate(${(exactMinutes / 2)}deg)`;
+            
+            let totalMins = Math.floor(exactMinutes) % 720;
+            let h = Math.floor(totalMins / 60) || 12;
+            let m = totalMins % 60;
+            document.getElementById('currentTime').innerText = `目前時間：${h} : ${m === 0 ? "00" : m}`;
+
+            if (Math.round(exactMinutes) === targetMins) {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                speakText("太棒了！答對了！");
+                setTimeout(generateNewTask, 2000);
+            }
+        }
+
+        // --- 核心修正：使用 touchstart 徹底取代 click ---
+        function bindButton(elementId, callback) {
+            const el = document.getElementById(elementId);
+            
+            // 針對手機的觸控事件 (反應最快，不會被三星瀏覽器吃掉)
+            el.addEventListener('touchstart', function(e) {
+                e.preventDefault(); 
+                if(!isProcessing) {
+                    isProcessing = true;
+                    callback();
+                    setTimeout(() => isProcessing = false, 300); // 防連點
+                }
+            }, {passive: false});
+            
+            // 針對電腦滑鼠的點擊事件 (保留給電腦測試用)
+            el.addEventListener('mousedown', function(e) {
+                if(!isProcessing) {
+                    isProcessing = true;
+                    callback();
+                    setTimeout(() => isProcessing = false, 300);
+                }
+            });
+        }
+
+        // 綁定各個按鈕的動作
+        bindButton('enterBtn', function() {
+            document.getElementById('homeScreen').style.display = 'none';
+            speakText("遊戲開始"); 
+            generateNewTask();
+        });
+
+        bindButton('addBtn', function() {
+            exactMinutes += 10;
+            updateDisplay();
+            let totalMins = Math.floor(exactMinutes) % 720;
+            let h = Math.floor(totalMins / 60) || 12;
+            let m = totalMins % 60;
+            speakText(`現在是 ${h} 點 ${m === 0 ? "鐘" : m + "分"}`);
+        });
+
+        bindButton('taskPanel', function() {
+            speakText(lastTargetText);
+        });
+
+    </script>
+</body>
+</html>
